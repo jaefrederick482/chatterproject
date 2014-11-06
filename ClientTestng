@@ -1,0 +1,13 @@
+package Client;
+
+import javax.swing.JFrame;
+
+public class ClientTesting {
+	public static void main (String[] args){
+		Client foster;
+		foster = new Client("127.0.0.1");
+		foster.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		foster.startServer();
+	}
+
+}
