@@ -1,0 +1,159 @@
+package Client;
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+
+import javax.swing.*;
+
+public class Client extends JFrame{
+
+	private JTextField clientText;
+	private JTextArea chatWindow;
+	private String serverIP;
+	private Socket connected;
+	private ObjectInputStream input;
+	private ObjectOutputStream output;
+	
+	/**
+	 * create a new constructor for the
+	 * client interface
+	 */
+	
+	public Client (String host){
+		super("Chatter");
+		serverIP=host;
+		clientText = new JTextField();
+		clientText.setEditable(false); //prevents the client from typing in the field
+		clientText.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent event){
+				sendMessage(event.getActionCommand());
+				clientText.setText("");
+			}
+		}
+	);
+		/**creating the gui window for client to interact with
+		 * 
+		 */
+		add(clientText, BorderLayout.NORTH);
+		chatWindow = new JTextArea();
+		add(new JScrollPane(chatWindow), BorderLayout.CENTER);
+		/**
+		 *  for the user to scroll up and down and view the history
+		 *  of the conversation.
+		 */
+		setSize(600,450);
+		setVisible(true);
+	}
+	/**
+	 * try to connect to server
+	 */
+	public void startServer(){
+		try{
+			connectServer();
+			setupStream();
+			clientSays();
+		}catch (EOFException eofException){
+			sendMessage("\n Connection terminated");
+		} catch (IOException ioException){
+			ioException.printStackTrace();
+		}finally {
+			closeChat();
+		}
+		
+		
+		
+	}
+	private void connectServer() throws IOException{
+		sendMessage("Trying to make a connection for client\n");
+		connected = new Socket(InetAddress.getByName(serverIP),6789);
+		sendMessage("connect to "+ connected.getInetAddress().getHostName()
+				);
+		}
+	
+	
+	
+	private void setupStream() throws IOException{
+		output = new ObjectOutputStream(connected.getOutputStream());
+	/**
+	 * sets up stream to send messages
+	 */
+		output.flush();
+		
+		input=new ObjectInputStream(connected.getInputStream());
+		sendMessage("You are able to chat :)!");
+		/** sets up stream to receive messages from server
+		 * 
+		 */
+	}
+	
+	private void clientSays() throws IOException{
+		canType(true); 
+		/** allows client to type in the field
+		 * 
+		 */
+		do{
+			try{
+				message = (String) input.readObject();
+				showMessage(" "+ message);				
+			}catch (ClassNotFoundException classNotFoundException){
+				showMessage("I do not understand");
+			}
+		}while(!message.equals("Server disconnected"));
+				
+			}
+			private void closeChat(){
+				sendMessage("Shutting down");
+				/**
+				 * closing the stream and sockets
+				 */
+				canType(false);
+				/**
+				 * client cannot chat at this point
+				 */
+				try{
+					output.close();
+					input.close();
+					connected.close();
+					/** shuts everything down
+					 * 
+					 */
+				}catch (IOException ioException){
+					ioException.printStackTrace();
+				}
+			}
+			
+			
+			private void sendMessage(String message){
+				try{ output.writeObject("Client  " + message);
+				output.flush();
+				sendMessage("Client says" + message);
+				} catch (IOException ioException){
+					chatWindow.append("Uh-oh!, something went wrong. Please try again");
+					
+				}
+			}
+		};
+	}
+/**
+ * allowing the client to type anything in the field
+ */
+private void canType(final boolean tof){
+	SwingUtilities.invokeLater(new Runnable); 
+	/** thread
+	 * 
+	 */
+	public void run()
+	{clientText.setEditable(tof);
+				}
+		{
+		};
+	}
+
+	
+
