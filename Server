@@ -1,0 +1,134 @@
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
+import javax.swing.*;
+import javax.swing.JTextField;
+
+
+public class Server extends JFrame {
+
+	private JTextField clientText;
+	private JTextArea chatWindow;
+	private String serverIP;
+	private Socket connected;
+	private ObjectInputStream input;
+	private ObjectOutputStream output;
+	
+	public Server(){
+		super("Chatter Chat Room");
+		
+		clientText = new JTextField();
+		clientText.setEditable(false); //prevents the client from typing in the field
+		clientText.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				sendMessage(e.getActionCommand());
+				clientText.setText("");
+			}
+		}
+	};
+	add(clientText, BorderLayout.NORTH);
+	chatWindow = new JTextArea();
+	add(new JScrollPane(chatWindow));
+	setSize(600,450);
+	setVisible(true);
+}
+public void startServer(){
+	try{
+		server= new ServerSocket(6789,100);
+		while(true){
+			try{
+				waitConnect();
+				setupStream();
+				serverSays();
+			} catch(EOFException eofException){
+				showMessage("Server has finally disconnected");
+				finally{
+					closeChat();
+				}
+			}
+			catch (IOException ioException){
+				ioException.printStackTrace();
+			}
+		}
+		private void waitConnect() throws IOException{
+			showMessage("....Waiting....still waiting....\n");
+			connected =server.accept();
+			showMessage("You are now connected to "+
+			connected.getInetAddress().getHostName());
+		}
+		
+		private void setupStream() throws IOException{
+				
+			output=new ObjectOutputStream(connected.getOutputStream());
+			output.flush();
+			input = new ObjectInputStream(connected.getInputStream());
+			showMessage("\n All set up");
+		}
+		
+		private void serverSays() throws IOException{
+			String  message = "You are now connected! Yay!";
+			sendMessage (message);
+			canType(true);
+			do{
+				try{	
+					message = (String) input.readObject();
+					showMessage("\n" + message);
+				} catch (ClassNotFoundException classNotFound){
+						showMessage("\n what did you SAY?");
+				}
+			}while (!message.equals("Client finished"));
+				
+				}
+		private void closeChat(){
+			showMessage("\n Attempting to close all connections");
+			canType(false);
+			try{
+				output.close();
+				input.close();
+				connected.close();
+			}catch (IOException ioException){
+				ioException.printStackTrace();
+			}
+		}
+		/**
+		 * 
+		 * for the server to send a message to the client
+		 */
+		private void sendMessage(String message){
+			try{
+				output.writeObject("Server says: "+message);
+				output.flush();
+				showMessage("\n Server typed "+message);
+			} catch (IOException ioException{
+				chatWindow.append(("Error sending message");
+				
+				private void canTypeshowMessage(final String text){
+					SwingUtilities.invokeLater(new Runnable(){
+						public void run(){
+							chatWindow.append(text);}
+						}
+					}; 
+					/** thread
+					 * 
+					 */
+					private void canType(final boolean tof){
+						SwingUtilities.invokeLater(new Runnable); 
+						/** thread
+						 * 
+						 */
+						public void run(){
+							clientText.setEditable(tof);
+						}
+						public void setDefaultCloseOperation(int exitOnClose) {
+							// TODO Auto-generated method stub
+							
+						}
+					}
+			};
+			
+		}
+	}
